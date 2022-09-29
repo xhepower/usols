@@ -1,4 +1,4 @@
-/*TODOS
+/*TODO LIST **QUE JODE ESA TITI**
 
 -elimine todos los datos que no sean carpeta
 -Que lea las carpetas (si las puede crear con los usuarios mucho mejor aun)
@@ -15,8 +15,35 @@
 */
 
 const fs = require('fs');
+const path = require('path');
 const pdfPath = './pdf/';
-const carpetas = (async () => {
-  return fs.readdirSync(pdfPath);
+
+const borrarArchivos = (file) => {
+  fs.unlinkSync(file);
+};
+const carpetas = (() => {
+  const archivos = fs.readdirSync(pdfPath);
+  const directorios = [];
+  archivos.map((item) => {
+    const stat = fs.statSync(`${pdfPath}/${item}`);
+    if (stat.isDirectory()) {
+      directorios.push(item);
+    } else {
+      borrarArchivos(`${pdfPath}/${item}`);
+    }
+  });
+  return directorios;
 })();
-console.log(carpetas);
+//console.log(carpetas);
+
+const leerArchivosServer = async (carpeta) => {
+  const archivos = fs.readdirSync(carpeta);
+  return archivos;
+};
+
+(async () => {
+  await carpetas.map(async (carpeta) => {
+    const archivos = await leerArchivosServer(`${pdfPath}/${carpeta}`);
+    console.log(archivos);
+  });
+})();
