@@ -19,7 +19,7 @@
     "ip": "^1.1.8",
     "moment": "^2.29.3",
     "nodemon": "^2.0.18",
-    "pdf2json": "^2.0.1",
+    "pdfjs-dist": "*",
     "uuid": "^8.3.2"
   },
   "keywords": [],

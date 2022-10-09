@@ -1,6 +1,6 @@
 /*TODO LIST **QUE JODE ESA TITI**
 
--elimine todos los datos que no sean carpeta
+-!!!! elimine todos los datos que no sean carpeta
 -Que lea las carpetas (si las puede crear con los usuarios mucho mejor aun)
 -Que por cada carpeta lea los archivos
 -que elimine los que nos son pdf
@@ -16,34 +16,62 @@
 
 const fs = require('fs');
 const path = require('path');
-const pdfPath = './pdf/';
-
-const borrarArchivos = (file) => {
-  fs.unlinkSync(file);
+const pdfPath = './pdf';
+const { esDigno } = require('./parser');
+const borrarArchivo = (path) => {
+  fs.unlinkSync(path);
 };
-const carpetas = (() => {
-  const archivos = fs.readdirSync(pdfPath);
-  const directorios = [];
-  archivos.map((item) => {
-    const stat = fs.statSync(`${pdfPath}/${item}`);
-    if (stat.isDirectory()) {
-      directorios.push(item);
+const borrarCarpeta = (path) => {
+  fs.rmdirSync(path);
+};
+
+const purgar = async () => {
+  //-elimine todos los datos que no sean carpeta
+
+  files = fs.readdirSync(pdfPath);
+  const carpetas = [];
+  files.map((f) => {
+    if (fs.statSync(`${pdfPath}/${f}`).isDirectory()) {
+      carpetas.push(f);
     } else {
-      borrarArchivos(`${pdfPath}/${item}`);
+      borrarArchivo(`${pdfPath}/${f}`);
     }
   });
-  return directorios;
-})();
-//console.log(carpetas);
-
-const leerArchivosServer = async (carpeta) => {
-  const archivos = fs.readdirSync(carpeta);
-  return archivos;
-};
-
-(async () => {
-  await carpetas.map(async (carpeta) => {
-    const archivos = await leerArchivosServer(`${pdfPath}/${carpeta}`);
-    console.log(archivos);
+  //eliminar todas las carpetas que esten dentro de la carpeta de usuarios
+  const pdfNuevosConRuta = [];
+  carpetas.map((c) => {
+    files = fs.readdirSync(`${pdfPath}/${c}`);
+    files.map((f) => {
+      if (fs.statSync(`${pdfPath}/${c}/${f}`).isDirectory()) {
+        borrarCarpeta(`${pdfPath}/${c}/${f}`);
+      } else {
+        if (
+          path.extname(f) == '.pdf' &&
+          fs.statSync(`${pdfPath}/${c}/${f}`).size > 0
+        ) {
+          if (f.substr(0, 4) == 'usol') {
+          } else {
+            pdfNuevosConRuta.push(`${pdfPath}/${c}/${f}`);
+          }
+        } else {
+          borrarArchivo(`${pdfPath}/${c}/${f}`);
+        }
+      }
+    });
   });
+  const pdfDignos = [];
+  await Promise.all(
+    pdfNuevosConRuta.map(async (pdf) => {
+      if (await esDigno(pdf)) {
+        pdfDignos.push(pdf);
+      } else {
+        borrarArchivo(pdf);
+      }
+    })
+  );
+  return pdfDignos;
+};
+(trabajo = async () => {
+  console.log(await purgar());
 })();
+module.exports = trabajo;
