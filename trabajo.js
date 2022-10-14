@@ -17,14 +17,16 @@
 const fs = require('fs');
 const path = require('path');
 const pdfPath = './pdf';
-const { esDigno } = require('./parser');
+
 const borrarArchivo = (path) => {
   fs.unlinkSync(path);
 };
 const borrarCarpeta = (path) => {
   fs.rmdirSync(path);
 };
-
+const nombreDeArchivo = async (datos) => {
+  return JSON.stringify(datos, ',', '-');
+};
 const purgar = async () => {
   //-elimine todos los datos que no sean carpeta
 
@@ -59,19 +61,9 @@ const purgar = async () => {
       }
     });
   });
-  const pdfDignos = [];
-  await Promise.all(
-    pdfNuevosConRuta.map(async (pdf) => {
-      if (await esDigno(pdf)) {
-        pdfDignos.push(pdf);
-      } else {
-        borrarArchivo(pdf);
-      }
-    })
-  );
-  return pdfDignos;
+  console.log(pdfNuevosConRuta);
 };
 (trabajo = async () => {
-  console.log(await purgar());
+  await purgar();
 })();
 module.exports = trabajo;
