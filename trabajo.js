@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const pdfPath = './pdf';
-
+const { esDigno, datos } = require('./parser');
 const borrarArchivo = (path) => {
   fs.unlinkSync(path);
 };
@@ -25,7 +25,8 @@ const borrarCarpeta = (path) => {
   fs.rmdirSync(path);
 };
 const nombreDeArchivo = async (datos) => {
-  return JSON.stringify(datos, ',', '-');
+  //return datos;
+  return `usol-${datos.date}-${datos.name}-${datos.id}-${datos.city}-${datos.phone}`;
 };
 const purgar = async () => {
   //-elimine todos los datos que no sean carpeta
@@ -61,9 +62,30 @@ const purgar = async () => {
       }
     });
   });
-  console.log(pdfNuevosConRuta);
+  pdfDignos = (async () => {
+    return await Promise.all(
+      pdfNuevosConRuta.map(async (pdf) => {
+        dignidad = await esDigno(pdf);
+        if (dignidad == true) {
+          return await datos(pdf);
+        } else {
+          borrarArchivo(pdf);
+        }
+      })
+    );
+  })();
+  console.log(
+    await Promise.all(
+      (
+        await pdfDignos
+      ).map(async (p) => {
+        return await nombreDeArchivo(p);
+      })
+    )
+  );
 };
 (trabajo = async () => {
   await purgar();
 })();
+
 module.exports = trabajo;

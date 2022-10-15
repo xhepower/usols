@@ -1,18 +1,24 @@
 const pdfjs = require('pdfjs-dist/legacy/build/pdf');
 const fs = require('fs');
-const { get } = require('http');
-const docvacio =
-  './pdf/zxzxzx/Consular Electronic Application Center - Print Applicationmai.pdf';
-const doc = './pdf/xzxz/garcia2.pdf';
+const { json } = require('express');
 
+const listaPDF = [
+  './pdf/xzxz/Consular Electronic Application Center.pdf',
+  './pdf/xzxz/garcia2.pdf',
+  './pdf/xzxz/HERMENCIA BENITEZ CONFIRMACION.pdf',
+  './pdf/xzxz/IZAGUIRRE BENITEZ, JOSE LUIS CONFIRMACION.pdf',
+  './pdf/xzxz/MARTINEZ SOTO, IVETH ALEXANDRA CONFIRMACION.pdf',
+  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2 - copia.pdf',
+  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2.pdf',
+  './pdf/xzxz/rajo.pdf',
+];
+
+//aquie empiezan las functions
 async function getContent(pdf) {
-  //en esta funcion se obtiene todo el texto de un pdf, de todas sus paginas
-  //se eliminan las lienas vacias
-  //
-  contenido = [];
   const doc = await pdfjs.getDocument(pdf).promise;
   const numPages = await doc._pdfInfo.numPages;
-  for (let i = 1; i <= numPages; i++) {
+  contenido = [];
+  for (i = 1; i <= numPages; i++) {
     let page = await doc.getPage(i);
     let pageText = await page.getTextContent();
     pageText.items.map((item) => {
@@ -23,17 +29,20 @@ async function getContent(pdf) {
   }
   return contenido;
 }
-
-async function pdfFechaToDate(fecha) {
-  let dateComponents = await fecha.split(',');
-  let datePieces = await dateComponents[0].split('/');
-  let timePieces = await dateComponents[1].split(':');
+async function esDigno(pdf) {
+  contenido = await getContent(pdf);
+  if (contenido.includes('Sensitive But Unclassified(SBU)')) {
+    return true;
+  } else {
+    return false;
+  }
+}
+function pdfFechaToDate(fecha) {
+  let dateComponents = fecha.split(',');
+  let datePieces = dateComponents[0].split('/');
+  //let timePieces = dateComponents[1].split(':');
   datePieces[2] = parseInt(datePieces[2]) + 2000;
   return new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
-}
-
-async function esDigno(pdf) {
-  getContent(pdf).then((p) => console.log(p));
 }
 
 function buscarEnContenido(dato, contenido) {
@@ -43,8 +52,10 @@ function buscarEnContenido(dato, contenido) {
     }
   }
 }
+//aqui empiezan los retornos
 
-async function datos(pdf, content) {
+async function datos(pdf) {
+  content = await getContent(pdf);
   const datosBusqueda = {
     name: 'Full Name in Native Language:',
     id: 'National Identification Number:',
@@ -58,36 +69,16 @@ async function datos(pdf, content) {
     refused:
       'Have you ever been refused a U.S. Visa, or been refused admission to',
   };
-  //contenido = await getContent(pdf);
   //extraer fecha
   losdatos = {};
-  losdatos.date = await pdfFechaToDate(content[0]);
+  losdatos.date = pdfFechaToDate(content[0]);
   for (const property in datosBusqueda) {
     //console.log(`${property}: ${object[property]}`);
-    losdatos[property] = buscarEnContenido(
-      datosBusqueda[property],
-      await contenido
-    );
+    losdatos[property] = buscarEnContenido(datosBusqueda[property], content);
   }
   return losdatos;
 }
-const listaPDF = [
-  './pdf/xzxz/Consular Electronic Application Center.pdf',
-  './pdf/xzxz/garcia2.pdf',
-  './pdf/xzxz/HERMENCIA BENITEZ CONFIRMACION.pdf',
-  './pdf/xzxz/IZAGUIRRE BENITEZ, JOSE LUIS CONFIRMACION.pdf',
-  './pdf/xzxz/MARTINEZ SOTO, IVETH ALEXANDRA CONFIRMACION.pdf',
-  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2 - copia.pdf',
-  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2.pdf',
-  './pdf/xzxz/rajo.pdf',
-];
-aja = [];
-(async () => {
-  return await Promise.all(
-    listaPDF.map(async (pdf) => {
-      return await getContent(pdf);
-    })
-  );
-})().then((w) => fs.writeFileSync('./puto.txt', JSON.stringify(w)));
-
-module.exports = { esDigno, getContent, datos };
+//datos(listaPDF).then((p) => fs.writeFileSync('./puto.txt', JSON.stringify(p)));
+//datos(listaPDF).then((p) => console.log(p));
+//console.log(new Date('Tue Jun 28 2022 00:00:00 GMT-0600'));
+module.exports = { getContent, esDigno, datos };
