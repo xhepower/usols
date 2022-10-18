@@ -13,10 +13,12 @@
 -suba los pdf con ese nombre
 
 */
-
+require('dotenv').config();
+const request = require('request');
 const fs = require('fs');
 const path = require('path');
 const pdfPath = './pdf';
+const service = require('./service');
 const { esDigno, datos } = require('./parser');
 const borrarArchivo = (path) => {
   fs.unlinkSync(path);
@@ -26,7 +28,15 @@ const borrarCarpeta = (path) => {
 };
 const nombreDeArchivo = async (datos) => {
   //return datos;
-  return `usol-${datos.date}-${datos.name}-${datos.id}-${datos.city}-${datos.phone}`;
+  return `usol-${await datos.date}-${datos.name}-${datos.idNumber}-${
+    datos.city
+  }-${datos.phone}`;
+};
+const guardarArchivo = async (datos) => {
+  //return datos;
+  datos.file = await nombreDeArchivo(datos);
+  await service.create(datos);
+  return datos;
 };
 const purgar = async () => {
   //-elimine todos los datos que no sean carpeta
@@ -62,28 +72,27 @@ const purgar = async () => {
       }
     });
   });
+
+  const nombresServer = async () => {
+    return await service.getAll();
+  };
   pdfDignos = (async () => {
     return await Promise.all(
       pdfNuevosConRuta.map(async (pdf) => {
         dignidad = await esDigno(pdf);
-        if (dignidad == true) {
-          return await datos(pdf);
+        if ((await dignidad) == true) {
+          // nombre = await nombreDeArchivo(await datos(pdf));
+
+          return await pdf;
         } else {
           borrarArchivo(pdf);
         }
       })
     );
   })();
-  console.log(
-    await Promise.all(
-      (
-        await pdfDignos
-      ).map(async (p) => {
-        return await nombreDeArchivo(p);
-      })
-    )
-  );
+  console.log(await pdfDignos);
 };
+
 (trabajo = async () => {
   await purgar();
 })();

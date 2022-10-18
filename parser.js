@@ -2,28 +2,17 @@ const pdfjs = require('pdfjs-dist/legacy/build/pdf');
 const fs = require('fs');
 const { json } = require('express');
 
-const listaPDF = [
-  './pdf/xzxz/Consular Electronic Application Center.pdf',
-  './pdf/xzxz/garcia2.pdf',
-  './pdf/xzxz/HERMENCIA BENITEZ CONFIRMACION.pdf',
-  './pdf/xzxz/IZAGUIRRE BENITEZ, JOSE LUIS CONFIRMACION.pdf',
-  './pdf/xzxz/MARTINEZ SOTO, IVETH ALEXANDRA CONFIRMACION.pdf',
-  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2 - copia.pdf',
-  './pdf/xzxz/Nonimmigrant Visa - Confirmation Pagedarey2.pdf',
-  './pdf/xzxz/rajo.pdf',
-];
-
 //aquie empiezan las functions
 async function getContent(pdf) {
-  const doc = await pdfjs.getDocument(pdf).promise;
+  const doc = await pdfjs.getDocument(await pdf).promise;
   const numPages = await doc._pdfInfo.numPages;
   contenido = [];
-  for (i = 1; i <= numPages; i++) {
+  for (i = 1; i <= (await numPages); i++) {
     let page = await doc.getPage(i);
     let pageText = await page.getTextContent();
-    pageText.items.map((item) => {
+    pageText.items.map(async (item) => {
       if (item.str != ' ' && item.str != '') {
-        contenido.push(item.str);
+        await contenido.push(item.str);
       }
     });
   }
@@ -31,7 +20,9 @@ async function getContent(pdf) {
 }
 async function esDigno(pdf) {
   contenido = await getContent(pdf);
-  if (contenido.includes('Sensitive But Unclassified(SBU)')) {
+  if (
+    await contenido.includes('Application - Sensitive But Unclassified(SBU)')
+  ) {
     return true;
   } else {
     return false;
@@ -45,7 +36,7 @@ function pdfFechaToDate(fecha) {
   return new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
 }
 
-function buscarEnContenido(dato, contenido) {
+async function buscarEnContenido(dato, contenido) {
   for (let i = 0; i <= contenido.length; i++) {
     if (contenido[i] == dato) {
       return contenido[i + 1];
@@ -55,10 +46,9 @@ function buscarEnContenido(dato, contenido) {
 //aqui empiezan los retornos
 
 async function datos(pdf) {
-  content = await getContent(pdf);
   const datosBusqueda = {
     name: 'Full Name in Native Language:',
-    id: 'National Identification Number:',
+    idNumber: 'National Identification Number:',
     city: 'City:',
     address: 'Home Address:',
     phone: 'Primary Phone Number:',
@@ -69,13 +59,17 @@ async function datos(pdf) {
     refused:
       'Have you ever been refused a U.S. Visa, or been refused admission to',
   };
-  //extraer fecha
   losdatos = {};
-  losdatos.date = pdfFechaToDate(content[0]);
-  for (const property in datosBusqueda) {
-    //console.log(`${property}: ${object[property]}`);
-    losdatos[property] = buscarEnContenido(datosBusqueda[property], content);
-  }
+  await Promise.all(
+    Object.keys(datosBusqueda).map(async (key) => {
+      let content = await getContent(pdf);
+      losdatos.date = pdfFechaToDate(await content[0]);
+      losdatos[key] = await buscarEnContenido(
+        datosBusqueda[key],
+        await content
+      );
+    })
+  );
   return losdatos;
 }
 //datos(listaPDF).then((p) => fs.writeFileSync('./puto.txt', JSON.stringify(p)));
