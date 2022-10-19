@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const instance = axios.create({
   baseURL: 'http://localhost:3000/api/v1',
-  timeout: 5000,
+  timeout: 50000,
   headers: {
     Accept: 'application/json',
     'Access-Control-Allow-Origin': '*',

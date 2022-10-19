@@ -2,7 +2,7 @@ const http = require('./http-common');
 //const axios = require("axios").default;
 class Service {
   async create(data) {
-    return http.post('/pdfs', data);
+    return http.post('/pdfs', JSON.stringify(data));
   }
 
   async getAll() {

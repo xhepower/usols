@@ -74,6 +74,21 @@ async function buscarEnContenido(dato, contenido) {
     }
   }
 }
+const fechaDDMMAAAA = (fecha) => {
+  let day = fecha.getDate();
+  let month = fecha.getMonth() + 1;
+  let year = fecha.getFullYear();
+
+  if (month < 10) {
+    return `${day}0${month}${year}`;
+  } else {
+    return `${day}${month}${year}`;
+  }
+};
+const nombreDeArchivo = (datos) => {
+  nombre = `usol-${fechaDDMMAAAA(datos.date)}-${datos.name}-${datos.idNumber}`;
+  return nombre;
+};
 //aqui empiezan los retornos
 
 async function datos(pdf) {
@@ -89,7 +104,17 @@ async function datos(pdf) {
     issued: 'Have you ever been issued a U.S. visa',
   };
   content = await getContent(pdf);
-  return content;
+  datos = {};
+  datos.date = pdfFechaToDate(content[0]);
+  await Promise.all(
+    Object.keys(datosBusqueda).map(async (key) => {
+      datos[key] = await buscarEnContenido(datosBusqueda[key], content);
+    })
+  );
+  datos.file = nombreDeArchivo(datos);
+  return datos;
+
+  //return content;
 }
 (async () => {})();
-module.exports = { getContent, esDigno, datos };
+module.exports = { getContent, esDigno, datos, nombreDeArchivo };
