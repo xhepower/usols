@@ -7,6 +7,16 @@ const dpath = require('path');
 const { esDigno, getContent, datos, nombreDeArchivo } = require('./nparser');
 
 const path = './pdfs';
+const nombreSinRuta = (nombre) => {
+  pos = 0;
+  for (i = nombre.length; i >= 0; i--) {
+    if (nombre.substring(i) == '/') {
+      pos = i;
+    }
+  }
+  return nombre.substring(i, nombre.length);
+};
+
 const purgar = () => {
   ArchivosBorrados = 0;
   totalArchivos = fs.readdirSync(path).length;
@@ -24,6 +34,7 @@ const purgar = () => {
     `Carpetas y archivos que no son pdf borrados: ${ArchivosBorrados}`
   );
 };
+
 listapdfs = (async () => {
   purgar();
   archivoFromato = 0;
@@ -32,6 +43,7 @@ listapdfs = (async () => {
     fs
       .readdirSync(path)
       .filter((pdf) => {
+        //console.log(nombreSinRuta(pdf));
         if (pdf.substring(0, 4) == 'usol') {
           archivosProcesados++;
           return false;
@@ -56,6 +68,7 @@ listapdfs = (async () => {
   console.log(`Archivos PDF a trabajar: ${aja.length - archivoFromato}`);
   return aja.filter((pdf) => pdf !== undefined);
 })();
+
 const borrarArchivo = async (path) => {
   fs.unlinkSync(path);
 };
@@ -67,6 +80,7 @@ const renombrar = async (archivo) => {
   fs.renameSync(archivo, nuevoNombre);
   return nuevoNombre;
 };
+
 const partirArray = async (array) => {
   arregloDeArreglos = []; // Aquí almacenamos los nuevos arreglos
   const LONGITUD_PEDAZOS = 20; // Partir en arreglo de 3
@@ -80,6 +94,9 @@ const guardarArchivo = async (datos) => {
   //return datos;
   //datos.file = await nombreDeArchivo(datos);
   await service.create(datos);
+};
+const subirArchivo = async (pdf) => {
+  service.uploadPDF(pdf);
 };
 const existe = async (datos) => {
   data = (await service.findByFile(datos.file)).data;
@@ -124,6 +141,8 @@ const Procesar = async () => {
                 if ((await existe(await datos(pdf))) == false) {
                   await guardarArchivo(await datos(pdf));
                   nuevoNombre = await renombrar(pdf);
+                  //console.log(nuevoNombre);
+                  await subirArchivo(nuevoNombre);
                   archivosGuardados++;
                 } else {
                   borrarArchivo(pdf);
