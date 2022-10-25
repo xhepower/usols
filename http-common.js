@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const instance = axios.create({
   baseURL: 'http://localhost:3000/api/v1',
+  //baseURL: 'https://hidden-wave-53367.herokuapp.com/api/v1',
   timeout: 50000,
   headers: {
     Accept: 'application/json',

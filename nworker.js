@@ -1,8 +1,6 @@
-const { execFileSync } = require('child_process');
 const fs = require('fs');
 var rimraf = require('rimraf');
 const service = require('./service');
-const { get } = require('request');
 const dpath = require('path');
 const { esDigno, getContent, datos, nombreDeArchivo } = require('./nparser');
 
@@ -142,7 +140,7 @@ const Procesar = async () => {
                   await guardarArchivo(await datos(pdf));
                   nuevoNombre = await renombrar(pdf);
                   //console.log(nuevoNombre);
-                  await subirArchivo(nuevoNombre);
+                  // await subirArchivo(nuevoNombre);
                   archivosGuardados++;
                 } else {
                   borrarArchivo(pdf);

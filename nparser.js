@@ -1,31 +1,11 @@
 const pdfParse = require('pdf-parse');
 const fs = require('fs');
+const { sacarImagen } = require('./sacar-imagen-pdf.mjs');
 elpdf =
   './pdf/zxzxzx/Consular Electronic Application Center - Print Applicationdanie2.pdf';
 otropdf =
   './pdf/zxzxzx/Consular Electronic Application Center - Print Applicationmede.pdf';
 
-/*const getContent = async (rutapdf) => {
-  arrayDatos = [];
-  texto = (await pdfParse(await rutapdf)).text;
-  texto
-    .split('\n')
-    .map((texto) => {
-      return texto.split(',');
-    })
-    .flat()
-    .map((texto) => texto.split(':'))
-    .flat()
-    .map((texto) => texto.split('?'))
-    .flat()
-    .map((texto) => {
-      if (texto == '') {
-      } else {
-        arrayDatos.push(texto);
-      }
-    });
-  return arrayDatos;
-};*/
 const getContent = async (pdf) => {
   return (await pdfParse(pdf)).text
     .split('\n')
@@ -43,13 +23,7 @@ const getContent = async (pdf) => {
     .split(',')
     .filter((item) => item !== '');
 };
-/*(async () => {
-  texto = '';
-  (await contenidito(elpdf)).forEach((item) => {
-    texto = texto + `${item}\n`;
-  });
-  console.log(texto);
-})();*/
+
 async function esDigno(pdf) {
   contenido = await getContent(pdf);
   if (
@@ -106,6 +80,9 @@ async function datos(pdf) {
   content = await getContent(pdf);
   datos = {};
   datos.date = pdfFechaToDate(content[0]);
+  datos.photo = sacarImagen(pdf, 'photo');
+  datos.barcode = sacarImagen(pdf, 'barcode');
+  console.log(datos.photo);
   await Promise.all(
     Object.keys(datosBusqueda).map(async (key) => {
       datos[key] = await buscarEnContenido(datosBusqueda[key], content);
