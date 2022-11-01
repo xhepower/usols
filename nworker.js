@@ -1,13 +1,20 @@
-const fs = require('fs');
+/*const fs = require('fs');
 var rimraf = require('rimraf');
 const service = require('./service');
 const dpath = require('path');
-const { esDigno, getContent, datos, nombreDeArchivo } = require('./nparser');
-
+const { esDigno, getContent, datos, nombreDeArchivo } = require('./nparser');*/
+import * as fs from 'fs';
+import rimraf from 'rimraf';
+import { Service } from './service.js';
+import * as dpath from 'path';
+import { esDigno, getContent, datos, nombreDeArchivo } from './nparser.js';
+const service = new Service();
 const path = './pdfs';
 const nombreSinRuta = (nombre) => {
-  pos = 0;
-  for (i = nombre.length; i >= 0; i--) {
+  let pos = 0;
+  const longitud = nombre.length;
+  let i = 0;
+  for (i = longitud; i >= 0; i--) {
     if (nombre.substring(i) == '/') {
       pos = i;
     }
@@ -16,8 +23,8 @@ const nombreSinRuta = (nombre) => {
 };
 
 const purgar = () => {
-  ArchivosBorrados = 0;
-  totalArchivos = fs.readdirSync(path).length;
+  let ArchivosBorrados = 0;
+  let totalArchivos = fs.readdirSync(path).length;
   fs.readdirSync(path).map((file) => {
     if (
       fs.statSync(`${path}/${file}`).isDirectory() ||
@@ -33,11 +40,11 @@ const purgar = () => {
   );
 };
 
-listapdfs = (async () => {
+const listapdfs = (async () => {
   purgar();
-  archivoFromato = 0;
-  archivosProcesados = 0;
-  aja = await Promise.all(
+  let archivoFromato = 0;
+  let archivosProcesados = 0;
+  const aja = await Promise.all(
     fs
       .readdirSync(path)
       .filter((pdf) => {
@@ -74,13 +81,13 @@ const borrarArchivo = async (path) => {
 const renombrar = async (archivo) => {
   const adatos = await datos(archivo);
   const anombre = await nombreDeArchivo(adatos);
-  nuevoNombre = `${path}/${anombre}.pdf`;
+  const nuevoNombre = `${path}/${anombre}.pdf`;
   fs.renameSync(archivo, nuevoNombre);
   return nuevoNombre;
 };
 
 const partirArray = async (array) => {
-  arregloDeArreglos = []; // Aquí almacenamos los nuevos arreglos
+  let arregloDeArreglos = []; // Aquí almacenamos los nuevos arreglos
   const LONGITUD_PEDAZOS = 20; // Partir en arreglo de 3
   for (let i = 0; i < array.length; i += LONGITUD_PEDAZOS) {
     let pedazo = array.slice(i, i + LONGITUD_PEDAZOS);
@@ -93,11 +100,11 @@ const guardarArchivo = async (datos) => {
   //datos.file = await nombreDeArchivo(datos);
   await service.create(datos);
 };
-const subirArchivo = async (pdf) => {
-  service.uploadPDF(pdf);
+const subirArchivo = async (pdf, nombrepdf) => {
+  service.uploadPDFFtp(pdf, nombrepdf);
 };
 const existe = async (datos) => {
-  data = (await service.findByFile(datos.file)).data;
+  const data = (await service.findByFile(datos.file)).data;
   if (data.length == 0) {
     return false;
   } else {
@@ -105,10 +112,10 @@ const existe = async (datos) => {
   }
 };
 const Procesar = async () => {
-  array = [];
-  archivosRepetidos = 0;
-  archivosGuardados = 0;
-  lali = await Promise.all(
+  let array = [];
+  let archivosRepetidos = 0;
+  let archivosGuardados = 0;
+  const lali = await Promise.all(
     (
       await listapdfs
     ).map(async (pdf) => {
@@ -128,7 +135,7 @@ const Procesar = async () => {
     })
   );
   //console.log(array);
-  lista = await partirArray(lali);
+  const lista = await partirArray(lali);
   const aja = async () => {
     return await Promise.all(
       lista.map(
@@ -138,9 +145,9 @@ const Procesar = async () => {
               try {
                 if ((await existe(await datos(pdf))) == false) {
                   await guardarArchivo(await datos(pdf));
-                  nuevoNombre = await renombrar(pdf);
+                  let nuevoNombre = await renombrar(pdf);
                   //console.log(nuevoNombre);
-                  // await subirArchivo(nuevoNombre);
+                  await subirArchivo(nuevoNombre, nombreSinRuta(nuevoNombre));
                   archivosGuardados++;
                 } else {
                   borrarArchivo(pdf);

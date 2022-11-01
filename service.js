@@ -1,8 +1,14 @@
-const http = require('./http-common');
+/*const http = require('./http-common');
 const FormData = require('form-data');
-const fs = require('fs');
+const fs = require('fs');*/
+import {} from 'dotenv/config';
+import { instance as http } from './http-common.js';
+import FormData from 'form-data';
+import fs from 'fs';
+import { FTPClient as Ftp } from './FTP.js';
+
 //const axios = require("axios").default;
-class Service {
+export class Service {
   async create(data) {
     return http.post('/pdfs', JSON.stringify(data));
   }
@@ -54,5 +60,18 @@ class Service {
       return new Error(err.message);
     }
   }
+  async uploadPDFFtp(pdf, nombrepdf) {
+    const ftpClient = new Ftp(
+      process.env.FTP_HOSTNAME,
+      21,
+      process.env.FTP_USERNAME,
+      process.env.FTP_PASSWORD,
+      false
+    );
+    //ftpClient.ftp.verbose = true;
+    try {
+      await ftpClient.upload(pdf, `public_html/${nombrepdf}`, 755);
+    } catch (error) {}
+    await ftpClient.close();
+  }
 }
-module.exports = new Service();

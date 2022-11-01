@@ -1,9 +1,13 @@
-const pdfParse = require('pdf-parse');
+/*const pdfParse = require('pdf-parse');
 const fs = require('fs');
-const { sacarImagen } = require('./sacar-imagen-pdf.mjs');
-elpdf =
+const { sacarImagen } = require('./sacar-imagen-pdf.mjs');*/
+import pdfParse from 'pdf-parse';
+import { exportImages } from 'pdf-export-images';
+import * as fs from 'fs';
+//import { sacarImagenPdf } from './sacar-imagen-pdf.js';
+const elpdf =
   './pdf/zxzxzx/Consular Electronic Application Center - Print Applicationdanie2.pdf';
-otropdf =
+const otropdf =
   './pdf/zxzxzx/Consular Electronic Application Center - Print Applicationmede.pdf';
 
 const getContent = async (pdf) => {
@@ -25,10 +29,8 @@ const getContent = async (pdf) => {
 };
 
 async function esDigno(pdf) {
-  contenido = await getContent(pdf);
-  if (
-    await contenido.includes('Application - Sensitive But Unclassified(SBU)')
-  ) {
+  const contenido = await getContent(pdf);
+  if (contenido.includes('Application - Sensitive But Unclassified(SBU)')) {
     return true;
   } else {
     return false;
@@ -48,6 +50,20 @@ async function buscarEnContenido(dato, contenido) {
     }
   }
 }
+const sacarImagen = async (pdf, tipo) => {
+  await exportImages(pdf, 'images');
+  const photo = fs.readFileSync('./images/img_p0_2.png', {
+    encoding: 'base64',
+  });
+  const barcode = fs.readFileSync('./images/img_p0_3.png', {
+    encoding: 'base64',
+  });
+  if ((tipo = 'photo')) {
+    return photo;
+  } else {
+    return barcode;
+  }
+};
 const fechaDDMMAAAA = (fecha) => {
   let day = fecha.getDate();
   let month = fecha.getMonth() + 1;
@@ -60,7 +76,9 @@ const fechaDDMMAAAA = (fecha) => {
   }
 };
 const nombreDeArchivo = (datos) => {
-  nombre = `usol-${fechaDDMMAAAA(datos.date)}-${datos.name}-${datos.idNumber}`;
+  const nombre = `usol-${fechaDDMMAAAA(datos.date)}-${datos.name}-${
+    datos.idNumber
+  }`;
   return nombre;
 };
 //aqui empiezan los retornos
@@ -77,12 +95,12 @@ async function datos(pdf) {
     purpose: 'Purpose of Trip to the U.S. (1)',
     issued: 'Have you ever been issued a U.S. visa',
   };
-  content = await getContent(pdf);
-  datos = {};
+  const content = await getContent(pdf);
+  let datos = {};
   datos.date = pdfFechaToDate(content[0]);
-  datos.photo = sacarImagen(pdf, 'photo');
-  datos.barcode = sacarImagen(pdf, 'barcode');
-  console.log(datos.photo);
+  // datos.photo = await sacarImagen(pdf, 'photo');
+  // datos.barcode = await sacarImagen(pdf, 'barcode');
+
   await Promise.all(
     Object.keys(datosBusqueda).map(async (key) => {
       datos[key] = await buscarEnContenido(datosBusqueda[key], content);
@@ -94,4 +112,4 @@ async function datos(pdf) {
   //return content;
 }
 (async () => {})();
-module.exports = { getContent, esDigno, datos, nombreDeArchivo };
+export { getContent, esDigno, datos, nombreDeArchivo };
