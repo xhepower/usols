@@ -76,7 +76,8 @@ const fechaDDMMAAAA = (fecha) => {
   }
 };
 const nombreDeArchivo = (datos) => {
-  const nombre = `usol-${fechaDDMMAAAA(datos.date)}-${datos.name}-${
+  let guionesbajos = datos.name.split(' ').join('_');
+  const nombre = `usol-${fechaDDMMAAAA(datos.date)}-${guionesbajos}-${
     datos.idNumber
   }`;
   return nombre;
@@ -107,6 +108,9 @@ async function datos(pdf) {
     })
   );
   datos.file = nombreDeArchivo(datos);
+  if (datos.issued !== 'NO') {
+    datos.estado = 'proceso';
+  }
   return datos;
 
   //return content;

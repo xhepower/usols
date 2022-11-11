@@ -1,7 +1,8 @@
 import axios from 'axios';
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 export const instance = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
+  baseURL: process.env.BASE_URL,
   //baseURL: 'https://hidden-wave-53367.herokuapp.com/api/v1',
   timeout: 50000,
   headers: {
