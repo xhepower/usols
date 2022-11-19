@@ -33,4 +33,7 @@ export class Service {
   async findByInterval(fecha1, fecha2) {
     return http.get(`/pdfs?fecha1=${fecha1}&fecha2=${fecha2}`);
   }
+  async upload(data) {
+    return http.post(`/pdfs/subir`, data);
+  }
 }
