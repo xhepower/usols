@@ -1,11 +1,18 @@
 import { datos, esDigno, nombreDeArchivo } from './handlePdf.js';
+import { upload } from './handleUpload.js';
+import { partirArray } from './utils.js';
 import * as fs from 'fs';
 import rimraf from 'rimraf';
 import * as dpath from 'path';
+import {
+  existe,
+  guardarArchivo,
+  archivosEnServer,
+  subirArchivo,
+  archivosBD,
+} from './handleBD.js';
 const path = './pdfs';
 
-//las variables a imprimir
-let archivosNoPdf = 0;
 const purgar = async () => {
   let files = await Promise.all(
     fs
@@ -37,9 +44,38 @@ const purgar = async () => {
   files = files.filter((file) => {
     return file == null ? false : true;
   });
-  return files;
+  console.log('Los arvhivos a trabajar son ', files.length);
+  return partirArray(files, 2);
 };
+const trabajar = async () => {
+  const archivosYaSubidos = await archivosEnServer();
+  const archivosYaGuardados = (await archivosBD()).map((item) => item.file);
 
+  const files = await purgar();
+  let archivosSubidos = 0;
+  let archivosGuardados = 0;
+  await Promise.all(
+    files.map(async (bloque) => {
+      await Promise.all(
+        bloque.map(async (pdf) => {
+          let ruta = `${path}/${pdf}`;
+          let dato = await datos(ruta);
+          let nombre = dato.file;
+          if (archivosYaGuardados.includes(nombre) == false) {
+            await guardarArchivo(dato);
+            archivosGuardados++;
+          }
+          if (archivosYaSubidos.includes(nombre) == false) {
+            await upload(ruta);
+            archivosSubidos++;
+          }
+        })
+      );
+    })
+  );
+  console.log('los archivos guardados son ', archivosGuardados);
+  console.log('los archivos subidos son ', archivosSubidos);
+};
 (async () => {
-  console.log(await purgar());
+  await trabajar();
 })();

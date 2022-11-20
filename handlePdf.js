@@ -6,7 +6,7 @@ const pdf1 = './pdfs/ANGIE NAVARRETE (3rd copy).pdf';
 const pdf2 =
   './pdfs/Consular Electronic Application Center - Print Applicationema.pdf';
 
-const getContent = async (pdf) => {
+export const getContent = async (pdf) => {
   return (await pdfParse(pdf)).text
     .split('\n')
     .toString()

@@ -11,6 +11,9 @@ export class Service {
   async getAll() {
     return http.get('/pdfs');
   }
+  async getArchivos() {
+    return http.get('/pdfs/archivos');
+  }
   async get(id) {
     return http.get(`/pdfs/${id}`);
   }

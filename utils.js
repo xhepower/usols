@@ -9,7 +9,7 @@ export const fechaDDMMAAAA = (fecha) => {
     return `${day}${month}${year}`;
   }
 };
-export const partirArray = async (array) => {
+export const partirArray = async (array, LONGITUD_PEDAZOS) => {
   let arregloDeArreglos = [];
   for (let i = 0; i < array.length; i += LONGITUD_PEDAZOS) {
     let pedazo = array.slice(i, i + LONGITUD_PEDAZOS);

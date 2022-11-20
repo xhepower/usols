@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 export const instance = axios.create({
   baseURL: process.env.BASE_URL,
-  //baseURL: 'https://hidden-wave-53367.herokuapp.com/api/v1',
+  //baseURL: 'http://hidden-wave-53367.herokuapp.com/api/v1',
   timeout: 50000,
   headers: {
     Accept: 'application/json',
