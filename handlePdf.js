@@ -33,9 +33,7 @@ export async function esDigno(pdf) {
 }
 export const nombreDeArchivo = (datos) => {
   let guionesbajos = datos.name.split(' ').join('_');
-  const nombre = `usol-${utils.fechaDDMMAAAA(datos.date)}-${guionesbajos}-${
-    datos.idNumber
-  }-${datos.phone}-${datos.passport}.pdf`;
+  const nombre = `usol-${guionesbajos}-${datos.idNumber}-${datos.phone}-${datos.passport}.pdf`;
   return nombre;
 };
 export async function datos(pdf) {
@@ -52,13 +50,24 @@ export async function datos(pdf) {
   };
   const content = await getContent(pdf);
   let datos = {};
-
+  /*
   datos.date = (() => {
-    let datePieces = content[0].split('/');
-    datePieces[2] = parseInt(datePieces[2]) + 2000;
-    return new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
+    try {
+      //console.log(content[0]);
+      if (content[0] == 'Online Nonimmigrant Visa Application (DS-160)') {
+        return new Date('2000-01-01');
+      }
+      let datePieces = content[0].split('/');
+      datePieces[2] = parseInt(datePieces[2]) + 2000;
+      return new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
+    } catch (error) {
+      datos.date = new Date('2000-01-01');
+    }
   })();
-
+  if (datos.date == null) {
+    datos.date = new Date('2000-01-01');
+  }*/
+  //datos.date = new Date();
   await Promise.all(
     Object.keys(datosBusqueda).map((key) => {
       datos[key] = (() => {
