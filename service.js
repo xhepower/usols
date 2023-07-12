@@ -1,5 +1,3 @@
-import EasyFtp from 'easy-ftp';
-
 import { instance as http } from './http-common.js';
 
 //const axios = require("axios").default;

@@ -1,42 +1,41 @@
 import pdfParse from 'pdf-parse';
 import { exportImages } from 'pdf-export-images';
-import * as fs from 'fs';
-import * as utils from './utils.js';
-const pdf1 = './pdfs/ANGIE NAVARRETE (3rd copy).pdf';
-const pdf2 =
-  './pdfs/Consular Electronic Application Center - Print Applicationema.pdf';
-
+const pdfPrueba = './usol-pdfs/ANA BESSY MEJIA.pdf';
 export const getContent = async (pdf) => {
-  return (await pdfParse(pdf)).text
-    .split('\n')
-    .toString()
-    .split(',')
-    .toString()
-    .split(',')
-    .toString()
-    .split(':')
-    .toString()
-    .split(',')
-    .toString()
-    .split('?')
-    .toString()
-    .split(',')
-    .filter((item) => item !== '');
+  try {
+    return (await pdfParse(pdf)).text
+      .split('\n')
+      .toString()
+      .split(',')
+      .toString()
+      .split(',')
+      .toString()
+      .split(':')
+      .toString()
+      .split(',')
+      .toString()
+      .split('?')
+      .toString()
+      .split(',')
+      .filter((item) => item !== '');
+  } catch (error) {
+    throw new Error(error);
+  }
 };
-export async function esDigno(pdf) {
-  const contenido = await getContent(pdf);
+
+// exportImages(pdfPrueba, 'photos')
+//   .then((images) => console.log('Exported', images.length, 'images'))
+//   .catch(console.error);
+
+export function esDigno(contenido) {
   if (contenido.includes('Application - Sensitive But Unclassified(SBU)')) {
     return true;
   } else {
     return false;
   }
 }
-export const nombreDeArchivo = (datos) => {
-  let guionesbajos = datos.name.split(' ').join('_');
-  const nombre = `usol-${guionesbajos}-${datos.idNumber}-${datos.phone}-${datos.passport}.pdf`;
-  return nombre;
-};
-export async function datos(pdf) {
+
+export function datosPDF(content) {
   const datosBusqueda = {
     name: 'Full Name in Native Language',
     idNumber: 'National Identification Number',
@@ -48,43 +47,41 @@ export async function datos(pdf) {
     purpose: 'Purpose of Trip to the U.S. (1)',
     issued: 'Have you ever been issued a U.S. visa',
   };
-  const content = await getContent(pdf);
+
   let datos = {};
-  /*
-  datos.date = (() => {
-    try {
-      //console.log(content[0]);
-      if (content[0] == 'Online Nonimmigrant Visa Application (DS-160)') {
-        return new Date('2000-01-01');
-      }
-      let datePieces = content[0].split('/');
-      datePieces[2] = parseInt(datePieces[2]) + 2000;
-      return new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
-    } catch (error) {
-      datos.date = new Date('2000-01-01');
-    }
-  })();
-  if (datos.date == null) {
-    datos.date = new Date('2000-01-01');
-  }*/
-  //datos.date = new Date();
-  await Promise.all(
-    Object.keys(datosBusqueda).map((key) => {
-      datos[key] = (() => {
-        for (let i = 0; i <= content.length; i++) {
-          if (content[i] == datosBusqueda[key]) {
-            return content[i + 1];
-          }
+  datos.fecha = fechaPDF(content[0]);
+  Object.keys(datosBusqueda).map((key) => {
+    datos[key] = (() => {
+      for (let i = 0; i <= content.length; i++) {
+        if (content[i] == datosBusqueda[key]) {
+          return content[i + 1];
         }
-      })();
-    })
-  );
-  datos.file = nombreDeArchivo(datos);
+      }
+    })();
+  });
   if (datos.issued !== 'NO') {
     datos.estado = 'proceso';
   }
   return datos;
 }
-(async () => {
-  // console.log((await datos(pdf1)).name);
-})();
+export const fechaPDF = (fechita) => {
+  let rta;
+  try {
+    if (fechita == 'Online Nonimmigrant Visa Application (DS-160)') {
+      rta = null;
+    }
+    let datePieces = fechita.split('/');
+    datePieces[2] = parseInt(datePieces[2]) + 2000;
+    rta = new Date(datePieces[2], datePieces[1] - 1, datePieces[0]);
+  } catch (error) {
+    rta = null;
+  }
+  return rta;
+};
+export function nombrePDF(datos) {
+  const fecha =
+    datos.fecha == null
+      ? 'null'
+      : datos.fecha.getDate() + '-' + datos.fecha.getMonth();
+  return datos.idNumber + '-' + datos.passport + '-' + fecha;
+}

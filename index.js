@@ -1,81 +1,45 @@
-import { datos, esDigno, nombreDeArchivo } from './handlePdf.js';
-import { upload } from './handleUpload.js';
-import { partirArray } from './utils.js';
 import * as fs from 'fs';
-import rimraf from 'rimraf';
-import * as dpath from 'path';
-import {
-  existe,
-  guardarArchivo,
-  archivosEnServer,
-  subirArchivo,
-  archivosBD,
-} from './handleBD.js';
-const path = './pdfs';
-
-const purgar = async () => {
-  let files = await Promise.all(
+import { getContent, esDigno, datosPDF, nombrePDF } from './handlePDF.js';
+import { isPDF, moverPDF } from './handleFiles.js';
+const path = './usol-pdfs';
+// aqui vamso a eliminar los archisvos que no sean pdf y los directorios
+// Eliminar todos los pdf que no sean dignos
+(async () => {
+  let archivos = await Promise.all(
     fs
       .readdirSync(path)
-      .filter((file) =>
-        fs.statSync(`${path}/${file}`).isDirectory() ||
-        dpath.extname(file).toLowerCase() !== '.pdf'
-          ? false
-          : true
-      )
-      .map(async (pdf) => ((await esDigno(`${path}/${pdf}`)) ? pdf : null))
+      .filter((archivo) => {
+        return isPDF(`${path}/${archivo}`);
+      })
+      .map(async (pdf) => {
+        const contenido = await getContent(`${path}/${pdf}`);
+        return [pdf, esDigno(contenido), contenido];
+      })
   );
-  let uniqueFiles = [];
-  files = files.filter((file) => {
-    return file == null ? false : true;
-  });
+  // let escribir = [];
+  archivos = archivos
+    .filter((pdf) => pdf[1])
+    .map((pdf) => {
+      const contenido = pdf[2];
+      const archivo = pdf[0];
 
-  files = await Promise.all(
-    files.map(async (pdf) => {
-      let nombre = (await datos(`${path}/${pdf}`)).file;
-      if (uniqueFiles.includes(nombre)) {
-        return null;
-      } else {
-        uniqueFiles.push(nombre);
-        return pdf;
-      }
+      const datos = datosPDF(contenido);
+      datos.archivo = archivo;
+      //console.log(contenido[0], new Date(datos.fecha), datos.archivo);
+      return datos;
+    });
+
+  //console.log(archivos);
+  Promise.all(
+    archivos.map((datos) => {
+      // console.log(datos);
+      datos.pdf = `${nombrePDF(datos)}.pdf`;
+      console.log(datos.archivo, datos.pdf);
+      //para moverlo a la carpeta pdf si no existe
+      moverPDF(`${path}/${datos.archivo}`, datos.pdf);
+      //para mandarlo al servidor si
     })
   );
-  files = files.filter((file) => {
-    return file == null ? false : true;
-  });
-  console.log('Los arvhivos a trabajar son ', files.length);
-  return partirArray(files, 2);
-};
-const trabajar = async () => {
-  const archivosYaSubidos = await archivosEnServer();
-  const archivosYaGuardados = (await archivosBD()).map((item) => item.file);
 
-  const files = await purgar();
-  let archivosSubidos = 0;
-  let archivosGuardados = 0;
-  await Promise.all(
-    files.map(async (bloque) => {
-      await Promise.all(
-        bloque.map(async (pdf) => {
-          let ruta = `${path}/${pdf}`;
-          let dato = await datos(ruta);
-          let nombre = dato.file;
-          if (archivosYaGuardados.includes(nombre) == false) {
-            await guardarArchivo(dato);
-            archivosGuardados++;
-          }
-          if (archivosYaSubidos.includes(nombre) == false) {
-            await upload(ruta);
-            archivosSubidos++;
-          }
-        })
-      );
-    })
-  );
-  console.log('los archivos guardados son ', archivosGuardados);
-  console.log('los archivos subidos son ', archivosSubidos);
-};
-(async () => {
-  await trabajar();
+  fs.writeFileSync('./puto.json', JSON.stringify(archivos));
 })();
