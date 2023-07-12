@@ -1,13 +1,16 @@
 import { instance as http } from './http-common.js';
 
 //const axios = require("axios").default;
-export class Service {
+export default class Service {
   async create(data) {
     return http.post('/pdfs', JSON.stringify(data));
   }
 
   async getAll() {
     return http.get('/pdfs');
+  }
+  async post(data) {
+    return http.post('/pdfs/', data);
   }
   async getArchivos() {
     return http.get('/pdfs/archivos');
@@ -37,4 +40,13 @@ export class Service {
   async upload(data) {
     return http.post(`/pdfs/subir`, data);
   }
+  async pdfGuardados() {
+    const datos = (await this.getAll()).data;
+    let guardados = [];
+    datos.map((dato) => {
+      guardados.push(dato.pdf);
+    });
+    return guardados;
+  }
 }
+const servicio = new Service();

@@ -1,6 +1,19 @@
 import * as fs from 'fs';
-import { getContent, esDigno, datosPDF, nombrePDF } from './handlePDF.js';
-import { isPDF, moverPDF } from './handleFiles.js';
+import dotenv from 'dotenv';
+dotenv.config();
+import FormData from 'form-data';
+import { exportImages } from 'pdf-export-images';
+import {
+  getContent,
+  esDigno,
+  datosPDF,
+  nombrePDF,
+  pdfSinExtension,
+  extraerImagenes,
+} from './handlePDF.js';
+import { isPDF, moverPDF, Imagenes } from './handleFiles.js';
+import { partirArray } from './utils.js';
+import { subir } from './handleServer.js';
 const path = './usol-pdfs';
 // aqui vamso a eliminar los archisvos que no sean pdf y los directorios
 // Eliminar todos los pdf que no sean dignos
@@ -25,21 +38,36 @@ const path = './usol-pdfs';
 
       const datos = datosPDF(contenido);
       datos.archivo = archivo;
-      //console.log(contenido[0], new Date(datos.fecha), datos.archivo);
+      datos.pdf = `${nombrePDF(datos)}.pdf`;
+      moverPDF(`${path}/${datos.archivo}`, datos.pdf);
       return datos;
     });
-
-  //console.log(archivos);
-  Promise.all(
-    archivos.map((datos) => {
-      // console.log(datos);
-      datos.pdf = `${nombrePDF(datos)}.pdf`;
-      console.log(datos.archivo, datos.pdf);
-      //para moverlo a la carpeta pdf si no existe
-      moverPDF(`${path}/${datos.archivo}`, datos.pdf);
-      //para mandarlo al servidor si
+  archivos = await Promise.all(
+    archivos.map(async (datos) => {
+      await extraerImagenes(datos.pdf);
+      return datos;
     })
   );
-
-  fs.writeFileSync('./puto.json', JSON.stringify(archivos));
+  archivos = await Promise.all(
+    archivos.map(async (datos) => {
+      const { photo, barcode } = await Imagenes(pdfSinExtension(datos.pdf));
+      datos.photo = photo;
+      datos.barcode = barcode;
+      datos.file = fs.readFileSync(`./pdfs/${datos.pdf}`).toString('base64');
+      datos.computadora = process.env.COMPUTADORA;
+      datos.oficina = process.env.OFICINA;
+      return datos;
+    })
+  );
+  const arregloDatos = await partirArray(archivos, 5);
+  await Promise.all(
+    arregloDatos.map(async (chunck) => {
+      await Promise.all(
+        chunck.map(async (datos) => {
+          await subir(datos);
+        })
+      );
+    })
+  );
+  // console.log(arregloDatos);
 })();

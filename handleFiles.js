@@ -23,4 +23,16 @@ export function moverPDF(rutaArchivo, nuevoNombre) {
     fs.renameSync(rutaArchivo, `./pdfs/${nuevoNombre}`);
   }
 }
+export const pdfSinExtension = (pdf) => {
+  return pdf.substring(0, pdf.length - 4);
+};
+export async function Imagenes(pdf) {
+  const photo = (
+    await fs.promises.readFile(`./images/${pdf}/img_p0_2.png`)
+  ).toString('base64');
+  const barcode = (
+    await fs.promises.readFile(`./images/${pdf}/img_p0_3.png`)
+  ).toString('base64');
+  return { photo, barcode };
+}
 export { isPDF };

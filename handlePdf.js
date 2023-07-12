@@ -1,6 +1,10 @@
 import pdfParse from 'pdf-parse';
+import * as fs from 'fs';
+import base64Img from 'base64-img';
 import { exportImages } from 'pdf-export-images';
-const pdfPrueba = './usol-pdfs/ANA BESSY MEJIA.pdf';
+import { fromPath } from 'pdf2pic';
+const pdfPrueba = '0301199500985-G706628-15-7.pdf';
+
 export const getContent = async (pdf) => {
   try {
     return (await pdfParse(pdf)).text
@@ -22,10 +26,6 @@ export const getContent = async (pdf) => {
     throw new Error(error);
   }
 };
-
-// exportImages(pdfPrueba, 'photos')
-//   .then((images) => console.log('Exported', images.length, 'images'))
-//   .catch(console.error);
 
 export function esDigno(contenido) {
   if (contenido.includes('Application - Sensitive But Unclassified(SBU)')) {
@@ -49,7 +49,7 @@ export function datosPDF(content) {
   };
 
   let datos = {};
-  datos.fecha = fechaPDF(content[0]);
+  datos.date = fechaPDF(content[0]);
   Object.keys(datosBusqueda).map((key) => {
     datos[key] = (() => {
       for (let i = 0; i <= content.length; i++) {
@@ -80,8 +80,22 @@ export const fechaPDF = (fechita) => {
 };
 export function nombrePDF(datos) {
   const fecha =
-    datos.fecha == null
+    datos.date == null
       ? 'null'
-      : datos.fecha.getDate() + '-' + datos.fecha.getMonth();
+      : datos.date.getDate() + '-' + datos.date.getMonth();
   return datos.idNumber + '-' + datos.passport + '-' + fecha;
+}
+
+export const pdfSinExtension = (pdf) => {
+  return pdf.substring(0, pdf.length - 4);
+};
+
+export async function extraerImagenes(pdf) {
+  await fs.promises.mkdir(`./images/${pdfSinExtension(pdf)}`, {
+    recursive: true,
+  });
+  return await exportImages(
+    `./pdfs/${pdf}`,
+    `./images/${pdfSinExtension(pdf)}/`
+  );
 }
