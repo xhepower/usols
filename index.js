@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import dotenv from 'dotenv';
 dotenv.config();
-import FormData from 'form-data';
-import { exportImages } from 'pdf-export-images';
+
 import {
   getContent,
   esDigno,

@@ -15,8 +15,8 @@ dotenv.config();
 // });
 
 export const instance = axios.create({
-  baseURL: 'http://localhost:3000/api/v1',
-  timeout: 5000,
+  baseURL: 'http://137.184.122.84:3000/api/v1',
+  timeout: 300000,
   headers: {
     Accept: 'application/json',
     'Access-Control-Allow-Origin': '*',
