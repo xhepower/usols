@@ -15,7 +15,7 @@ dotenv.config();
 // });
 
 export const instance = axios.create({
-  baseURL: 'http://137.184.122.84:3000/api/v1',
+  baseURL: process.env.BASE_URL,
   timeout: 300000,
   headers: {
     Accept: 'application/json',

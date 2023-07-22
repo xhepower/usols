@@ -35,4 +35,19 @@ export async function Imagenes(pdf) {
   ).toString('base64');
   return { photo, barcode };
 }
+export function escribirJSONBorrarDatos(datos) {
+  //esta funcion culera va a borrar los archivos que ya esten en la carpeta y añadira los que no esten ene l json
+  const archivosEnDatos = datos.map((dato) => dato.pdf);
+  const filesInFolder = fs.readdirSync('./pdfs/');
+  const archivos = JSON.parse(fs.readFileSync('./datos.json', 'utf8'));
+
+  console.log(
+    'archivos',
+    archivos,
+    'files',
+    filesInFolder,
+    'enDatos',
+    archivosEnDatos
+  );
+}
 export { isPDF };

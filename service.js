@@ -3,6 +3,7 @@ import { instance as http } from './http-common.js';
 //const axios = require("axios").default;
 export default class Service {
   async create(data) {
+    //console.log(JSON.stringify(data));
     return http.post('/pdfs', JSON.stringify(data));
   }
 
