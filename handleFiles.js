@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as dpath from 'path';
 
-const isPDF = (file) => {
+export const isPDF = (file) => {
   if (
     fs.statSync(`${file}`).isDirectory() ||
     dpath.extname(file).toLowerCase() !== '.pdf'
@@ -35,19 +35,22 @@ export async function Imagenes(pdf) {
   ).toString('base64');
   return { photo, barcode };
 }
-export function escribirJSONBorrarDatos(datos) {
+export function soloTumbados(datos) {
   //esta funcion culera va a borrar los archivos que ya esten en la carpeta y añadira los que no esten ene l json
-  const archivosEnDatos = datos.map((dato) => dato.pdf);
-  const filesInFolder = fs.readdirSync('./pdfs/');
-  const archivos = JSON.parse(fs.readFileSync('./datos.json', 'utf8'));
+  const archivosEnDatos = datos.filter((dato) => {
+    const filesInFolder = fs.readdirSync('./pdfs/');
+    return !filesInFolder.includes(dato.pdf);
+  });
 
-  console.log(
-    'archivos',
-    archivos,
-    'files',
-    filesInFolder,
-    'enDatos',
-    archivosEnDatos
-  );
+  return archivosEnDatos;
+  // const filesInFolder = fs.readdirSync('./pdfs/');
+  // const archivos = JSON.parse(fs.readFileSync('./datos.json', 'utf8'));
+  // console.log(
+  //   'archivos',
+  //   archivos,
+  //   'files',
+  //   filesInFolder,
+  //   'enDatos',
+  //   archivosEnDatos
+  // );
 }
-export { isPDF };
