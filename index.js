@@ -72,7 +72,9 @@ const path = './';
 // })();
 
 //Vamos a pasar todos los pdfs a la carpeta e ir agregando a un archivo los datos
+
 (async () => {
+  console.log('dandole atomos');
   let archivos = await Promise.all(
     fs
       .readdirSync(path)
@@ -123,7 +125,9 @@ const path = './';
       })
   );
   archivos = archivos.filter((dato) => dato !== null);
+  console.log('archivos movidos');
 })();
+
 //? Hasta aquí lelvo solucionado la parte local, aqui se viene lo chido:SERVER
 (async () => {
   const datosJSON = fs.readFileSync('datos.json', 'utf8');
@@ -154,5 +158,5 @@ const path = './';
       await subir(datos);
     })
   );
-  console.log(jsonData);
+  console.log('Dizque actualizado... Hay que ver. Saludos');
 })();
